@@ -1,0 +1,92 @@
+SQL Injection – UNION Based (MySQL / PostgreSQL / Oracle)
+1. Identifying the Vulnerable Parameter
+
+The first step is to identify where user input is being interpreted as part of an SQL query.
+
+Common injection points include:
+
+GET parameters (e.g. ?id=1)
+
+Login forms
+
+Search filters
+
+Cookies
+
+Common indicators of SQL injection
+
+SQL error messages
+
+Changes in the response when injecting '
+
+Different responses when testing logical conditions such as 1=1 and 1=2
+
+If adding a single quote (') alters the server response, the parameter is likely vulnerable.
+
+2. Determining the Number of Columns (ORDER BY)
+
+Before using UNION SELECT, the number of columns in the original query must be identified.
+
+This is done by incrementing the column index until an error occurs:
+
+' ORDER BY 1-- -
+' ORDER BY 2-- -
+' ORDER BY 3-- -
+
+
+The highest value that does not trigger an error represents the correct number of columns.
+
+3. Enumerating Databases (MySQL / PostgreSQL)
+
+Once the column count is known, UNION SELECT can be used to enumerate databases.
+
+Example assuming two columns:
+
+' UNION SELECT 1, schema_name
+FROM information_schema.schemata-- -
+
+
+This returns all available database names on the server.
+
+4. Enumerating Tables from a Specific Database
+
+After selecting a target database, its tables can be listed.
+
+' UNION SELECT 1, table_name
+FROM information_schema.tables
+WHERE table_schema = 'target_database'-- -
+
+
+This query reveals all tables belonging to the selected database.
+
+5. Enumerating Columns from a Table
+
+To extract data, column names must be identified.
+
+' UNION SELECT 1, column_name
+FROM information_schema.columns
+WHERE table_schema = 'target_database'
+AND table_name = 'target_table'-- -
+
+
+Typical results include columns such as username, password, or email.
+
+6. Extracting Data from the Table
+
+Once column names are known, data can be extracted directly.
+
+Example using GROUP_CONCAT:
+
+' UNION SELECT 1, GROUP_CONCAT(username, 0x3a, password)
+FROM target_database.target_table-- -
+
+
+Notes:
+
+0x3a represents the : character
+
+GROUP_CONCAT allows multiple rows to be displayed in a single response
+
+In some databases, concatenation can also be performed using:
+
+username || ':' || password
