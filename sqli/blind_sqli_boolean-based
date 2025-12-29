@@ -1,0 +1,58 @@
+Blind SQL Injection — Boolean-Based
+Overview
+
+This lab demonstrates a Blind SQL Injection (Boolean-Based) vulnerability where the application does not return database output or errors.
+Information is inferred by observing differences in the HTTP response when conditions evaluate to true or false.
+
+Vulnerability Detection
+
+A classic payload such as:
+
+' OR 1=1-- -
+
+
+does not produce visible errors or messages, but may subtly change the response.
+
+Indicators of a blind SQL injection include:
+
+Changes in page content
+
+Differences in Content-Length
+
+Small visual changes in the response
+
+If adding a single quote (') alters the response behavior, the parameter is likely injectable.
+
+Confirming User Existence
+' AND (SELECT 'a'
+FROM users
+WHERE username='administrator')='a'-- -
+
+Explanation
+
+The subquery checks whether the user exists
+
+If the condition is true, the application response changes
+
+This confirms the presence of the administrator account
+
+Character Enumeration
+' AND (SELECT SUBSTRING(password,1,1)
+FROM users
+WHERE username='administrator')='m'-- -
+
+
+This technique allows extracting data one character at a time by observing the response behavior.
+
+Password Length Discovery
+' AND (SELECT 'a'
+FROM users
+WHERE username='administrator'
+AND LENGTH(password)=20)='a'-- -
+
+
+If the response is valid, the password length is confirmed.
+
+Conclusion
+
+Using boolean-based inference, sensitive information can be extracted even when the application does not return database output directly.
